@@ -1,6 +1,5 @@
 use clap::{App, Arg, SubCommand};
 use std::collections::HashMap;
-use std::io::{self, Write};
 
 struct TodoItem {
     id: u32,
@@ -15,7 +14,7 @@ struct TodoList {
 impl TodoList {
     fn new() -> Self {
         TodoList {
-            items: HashMap::new();
+            items: HashMap::new(),
             next_id: 1,
         }
     }
@@ -33,7 +32,7 @@ impl TodoList {
         }
     }
 
-    fn remove($mut self, id: u32) {
+    fn remove(&mut self, id: u32) {
         if self.items.remove(&id).is_some() {
             println!("Removed task with ID: {}", id);
         } else {
@@ -53,8 +52,15 @@ fn main() {
             .help("The description of the task")
             .required(true)
             .index(1)))
+        .subcommand(SubCommand::with_name("view")
+            .about("Views all tasks"))
+        .subcommand(SubCommand::with_name("remove")
+            .about("Removes a task")
+            .arg(Arg::with_name("ID")
+                .help("The ID of the task")
+            .required(true)
+            .index(1)))
     .get_matches();
-
 
     let mut todo_list = TodoList::new();
 
