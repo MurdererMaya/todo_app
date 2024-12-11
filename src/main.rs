@@ -1,5 +1,6 @@
 use clap::{App, Arg, SubCommand};
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 struct TodoItem {
     id: u32,
@@ -39,6 +40,29 @@ impl TodoList {
             println!("Task with ID {} not found.", id);
         }
     }
+
+    fn save(&self) -> io::Result<()> {
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open("todo_list.json") {
+        serde_json::to_writer(file, &self)?; 
+        Ok(())
+        }
+    }
+
+    fn load() -> io::Result<Self> {
+        let mut file = match File::open("todo_list.json") {
+            Ok(file) => file,
+            Err(_) => return Ok(TodoList::new()),
+        };
+
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let todo_list = serde_json::from_str(&contents)?;
+        Ok(todo_list)
+    }
 }
 
 fn main() {
@@ -62,7 +86,7 @@ fn main() {
             .index(1)))
     .get_matches();
 
-    let mut todo_list = TodoList::new();
+    let mut todo_list = TodoList::load().expect("Failed to load tasks");
 
     if let Some(matches) = matches.subcommand_matches("add") {
         if let Some(description) = matches.value_of("DESCRIPTION") {
