@@ -1,12 +1,16 @@
 use clap::{App, Arg, SubCommand};
 use std::collections::HashMap;
+use std::fs::{File, OpenOptions};
+use std::io::{self, Read};
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)] 
 struct TodoItem {
     id: u32,
     description: String,
 }
 
+#[derive(Serialize, Deserialize)] 
 struct TodoList {
     items: HashMap<u32, TodoItem>,
     next_id: u32,
@@ -46,10 +50,9 @@ impl TodoList {
             .write(true)
             .create(true)
             .truncate(true)
-            .open("todo_list.json") {
+            .open("todo_list.json")?;
         serde_json::to_writer(file, &self)?; 
         Ok(())
-        }
     }
 
     fn load() -> io::Result<Self> {
@@ -67,24 +70,24 @@ impl TodoList {
 
 fn main() {
     let matches = App::new("Todo App")
-    .version("1.0")
-    .author("Your Name <you@example.com>")
-    .about("Manages a simple to-do list")
-    .subcommand(SubCommand::with_name("add")
-        .about("Adds a new task")
-        .arg(Arg::with_name("DESCRIPTION")
-            .help("The description of the task")
-            .required(true)
-            .index(1)))
+        .version("1.0")
+        .author("Your Name <you@example.com>")
+        .about("Manages a simple to-do list")
+        .subcommand(SubCommand::with_name("add")
+            .about("Adds a new task")
+            .arg(Arg::with_name("DESCRIPTION")
+                .help("The description of the task")
+                .required(true)
+                .index(1)))
         .subcommand(SubCommand::with_name("view")
             .about("Views all tasks"))
         .subcommand(SubCommand::with_name("remove")
             .about("Removes a task")
             .arg(Arg::with_name("ID")
                 .help("The ID of the task")
-            .required(true)
-            .index(1)))
-    .get_matches();
+                .required(true)
+                .index(1)))
+        .get_matches();
 
     let mut todo_list = TodoList::load().expect("Failed to load tasks");
 
@@ -103,4 +106,6 @@ fn main() {
             }
         }
     }
+
+    todo_list.save().expect("Failed to save tasks"); 
 }
